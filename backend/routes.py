@@ -5,6 +5,7 @@ from flask_jwt_extended import (
     jwt_required, get_jwt_identity
 )
 from flask_mail import Message
+import os
 
 def create_blueprints(google, mail):
     auth_bp = Blueprint("auth", __name__)
@@ -47,7 +48,7 @@ def create_blueprints(google, mail):
 
     # ---------- REFRESH TOKEN ----------
     @auth_bp.route("/refresh", methods=["POST"])
-    @jwt_required(refresh=True)  # <-- only accepts refresh tokens
+    @jwt_required(refresh=True)  # only accepts refresh tokens
     def refresh():
         current_user = get_jwt_identity()
         new_access = create_access_token(identity=current_user)
@@ -76,7 +77,10 @@ def create_blueprints(google, mail):
         access = create_access_token(identity=str(user.id))
         refresh = create_refresh_token(identity=str(user.id))
 
-        frontend_url = f"http://localhost:5173/login?access_token={access}&refresh_token={refresh}&email={email}"
+        # ✅ Use environment variable for frontend URL
+        FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
+        frontend_url = f"{FRONTEND_URL}/login?access_token={access}&refresh_token={refresh}&email={email}"
+
         return redirect(frontend_url)
 
     # ---------- TODO ROUTES ----------
@@ -131,7 +135,6 @@ def create_blueprints(google, mail):
         db.session.commit()
         return jsonify({"msg": "Todo deleted"}), 200
 
-    # ---------- MARK TODO COMPLETED ----------
     @todo_bp.route("/<int:todo_id>/complete", methods=["PUT"])
     @jwt_required()
     def complete_todo(todo_id):
