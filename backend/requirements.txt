@@ -9,6 +9,6 @@ google-auth
 google-auth-oauthlib
 Flask-Bcrypt
 Flask-JWT-Extended
-gunicorn
-authlib
 Flask-Mail
+Authlib
+gunicorn
