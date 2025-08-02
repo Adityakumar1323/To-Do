@@ -7,7 +7,7 @@ const backendUrl =
     : "https://to-do-5-e2go.onrender.com/api";
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_BACKEND_URL || "http://127.0.0.1:5000/api",
+  baseURL: backendUrl, // ✅ now using the correct variable
 });
 
 // ✅ Attach token to every request

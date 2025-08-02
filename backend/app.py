@@ -19,7 +19,8 @@ app.config["JWT_SECRET_KEY"] = "super-secret-key"
 app.secret_key = os.getenv("FLASK_SECRET_KEY", "my-dev-secret-key")
 
 # Allow CORS (frontend can call backend)
-CORS(app, supports_credentials=True, resources={r"/*": {"origins": ["http://localhost:5173", "http://127.0.0.1:5173","https://to-do-6-2awb.onrender.com"]}})
+CORS(app, supports_credentials=True,
+     resources={r"/*": {"origins": ["http://localhost:5173", "http://127.0.0.1:5173", "https://to-do-6-2awb.onrender.com"]}})
 
 # ---------- OAuth setup ----------
 oauth = OAuth(app)
