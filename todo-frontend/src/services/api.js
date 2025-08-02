@@ -1,7 +1,13 @@
 import axios from "axios";
 
+// ✅ Switch between local dev & Render automatically
+const backendUrl =
+  import.meta.env.MODE === "development"
+    ? "http://127.0.0.1:5000/api"
+    : "https://to-do-5-e2go.onrender.com/api";
+
 const api = axios.create({
-  baseURL: "http://127.0.0.1:5000/api",
+  baseURL: backendUrl,
 });
 
 // ✅ Attach token to every request
@@ -60,7 +66,13 @@ export const login = (email, password) =>
   api.post("/auth/login", { email, password });
 
 export const googleLogin = () => {
-  window.location.href = "http://127.0.0.1:5000/api/auth/google/login";
+  // ✅ dynamic Google login URL
+  const googleUrl =
+    import.meta.env.MODE === "development"
+      ? "http://127.0.0.1:5000/api/auth/google/login"
+      : "https://to-do-5-e2go.onrender.com/api/auth/google/login";
+
+  window.location.href = googleUrl;
 };
 
 // ---------- Todo APIs ----------

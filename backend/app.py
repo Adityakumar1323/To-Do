@@ -57,5 +57,9 @@ with app.app_context():
     for rule in app.url_map.iter_rules():
         print(rule)
 
-if __name__ == "__main__":
-    app.run(debug=True)
+# ---------- Create tables ----------
+with app.app_context():
+    db.create_all()
+    print("\nRegistered Routes:")
+    for rule in app.url_map.iter_rules():
+        print(rule)
