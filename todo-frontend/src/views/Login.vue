@@ -49,6 +49,12 @@
       >
         Continue with Google
       </a>
+
+      <!-- Register Link -->
+      <p class="text-center text-gray-600 mt-6">
+        Don’t have an account?
+        <a href="/register" class="text-green-500 hover:underline">Register</a>
+      </p>
     </div>
   </div>
 </template>
@@ -57,14 +63,9 @@
 import { ref, onMounted } from "vue";
 import API from "../services/api";
 
-// ✅ Switch backend URL automatically
-const backendUrl =
-  import.meta.env.MODE === "development"
-    ? "http://127.0.0.1:5000"
-    : "https://to-do-5-e2go.onrender.com"; // <-- your Render backend URL
-
 const email = ref("");
 const password = ref("");
+const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://127.0.0.1:5000";
 
 // ✅ handle normal login
 const handleLogin = async () => {
@@ -100,7 +101,6 @@ onMounted(() => {
       localStorage.setItem("user_email", emailFromGoogle);
     }
 
-    // ✅ clear query params before redirect
     window.history.replaceState({}, document.title, "/");
     window.location.href = "/";
   }

@@ -35,8 +35,8 @@ CORS(app,
 oauth = OAuth(app)
 google = oauth.register(
     name="google",
-    client_id=os.getenv("GOOGLE_CLIENT_ID"),
-    client_secret=os.getenv("GOOGLE_CLIENT_SECRET"),
+    client_id=os.getenv("76610639739-ekq368m7d44r5q1figakdi9qr7da59hq.apps.googleusercontent.com"),
+    client_secret=os.getenv("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"),
     server_metadata_url="https://accounts.google.com/.well-known/openid-configuration",
     client_kwargs={"scope": "openid email profile"},
 )
@@ -60,9 +60,8 @@ auth_bp, todo_bp = create_blueprints(google, mail)
 app.register_blueprint(auth_bp, url_prefix="/api/auth")
 app.register_blueprint(todo_bp, url_prefix="/api/todo")
 
-# ---------- Create tables ----------
-with app.app_context():
-    db.create_all()
-    print("\nRegistered Routes:")
-    for rule in app.url_map.iter_rules():
-        print(rule)
+# ---------- Create tables --------
+if __name__ == "__main__":
+    import os
+    port = int(os.environ.get("PORT", 5000))  # Render gives PORT, default to 5000 for local dev
+    app.run(host="0.0.0.0", port=port)

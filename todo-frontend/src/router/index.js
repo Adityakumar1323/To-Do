@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from "vue-router";
 import Login from "../views/Login.vue";
 import Dashboard from "../views/Dashboard.vue";
+import Register from "../views/Register.vue";
 
 const routes = [
   {
@@ -12,7 +13,11 @@ const routes = [
     path: "/",
     name: "Dashboard",
     component: Dashboard,
-    meta: { requiresAuth: true }, // ✅ Protect this route
+  },
+  {
+    path: "/register",
+    name: "Register",
+    component: Register,
   },
 ];
 
