@@ -7,6 +7,7 @@ from flask_jwt_extended import (
 from flask_mail import Message
 import os
 
+
 def create_blueprints(google, mail):
     auth_bp = Blueprint("auth", __name__)
     todo_bp = Blueprint("todo", __name__)
@@ -48,7 +49,7 @@ def create_blueprints(google, mail):
 
     # ---------- REFRESH TOKEN ----------
     @auth_bp.route("/refresh", methods=["POST"])
-    @jwt_required(refresh=True)  # only accepts refresh tokens
+    @jwt_required(refresh=True)
     def refresh():
         current_user = get_jwt_identity()
         new_access = create_access_token(identity=current_user)
@@ -77,9 +78,9 @@ def create_blueprints(google, mail):
         access = create_access_token(identity=str(user.id))
         refresh = create_refresh_token(identity=str(user.id))
 
-        # ✅ Use environment variable for frontend URL
-        FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
-        frontend_url = f"{FRONTEND_URL}/login?access_token={access}&refresh_token={refresh}&email={email}"
+        # ✅ Use environment variable for frontend URL (works in local & Render)
+        frontend_base = os.getenv("FRONTEND_URL", "http://localhost:5173")
+        frontend_url = f"{frontend_base}/login?access_token={access}&refresh_token={refresh}&email={email}"
 
         return redirect(frontend_url)
 
@@ -121,7 +122,11 @@ def create_blueprints(google, mail):
 
         todo.title = data.get("title", todo.title)
         db.session.commit()
-        return jsonify({"msg": "Todo updated", "id": todo.id, "title": todo.title}), 200
+        return jsonify({
+            "msg": "Todo updated",
+            "id": todo.id,
+            "title": todo.title
+        }), 200
 
     @todo_bp.route("/<int:todo_id>", methods=["DELETE"])
     @jwt_required()
@@ -147,7 +152,7 @@ def create_blueprints(google, mail):
         todo.completed = True
         db.session.commit()
 
-        # ✅ Send email
+        # ✅ Send email notification
         user = User.query.get(user_id)
         msg = Message(
             subject="✅ Task Completed!",
