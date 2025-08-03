@@ -5,7 +5,6 @@ from flask_jwt_extended import (
     jwt_required, get_jwt_identity
 )
 from flask_mail import Message
-import os
 
 
 def create_blueprints(google, mail):
@@ -47,6 +46,40 @@ def create_blueprints(google, mail):
 
         return jsonify({"msg": "Invalid credentials"}), 401
 
+    # ---------- GOOGLE OAUTH ----------
+    @auth_bp.route("/google/login")
+    def google_login_start():
+        redirect_uri = url_for("auth.google_callback", _external=True)
+        return google.authorize_redirect(redirect_uri)
+
+    @auth_bp.route("/google/callback")
+    def google_callback():
+        token = google.authorize_access_token()
+        resp = google.get("https://openidconnect.googleapis.com/v1/userinfo")
+        user_info = resp.json()
+
+        email = user_info.get("email")
+        name = user_info.get("name")
+        picture = user_info.get("picture")
+
+        if not email:
+            return jsonify({"msg": "Failed to retrieve Google account info"}), 400
+
+        user = User.query.filter_by(email=email).first()
+        if not user:
+            user = User(email=email)
+            user.set_password("google-oauth")
+            db.session.add(user)
+            db.session.commit()
+
+        access = create_access_token(identity=str(user.id))
+        refresh = create_refresh_token(identity=str(user.id))
+
+        frontend_url = "http://localhost:5173/login"
+        return redirect(
+            f"{frontend_url}?access={access}&refresh={refresh}&email={email}&name={name}&picture={picture}"
+        )
+
     # ---------- REFRESH TOKEN ----------
     @auth_bp.route("/refresh", methods=["POST"])
     @jwt_required(refresh=True)
@@ -55,40 +88,11 @@ def create_blueprints(google, mail):
         new_access = create_access_token(identity=current_user)
         return jsonify({"access_token": new_access}), 200
 
-    # ---------- GOOGLE LOGIN ----------
-    @auth_bp.route("/google/login")
-    def google_login():
-        redirect_uri = url_for("auth.google_callback", _external=True)
-        return google.authorize_redirect(redirect_uri)
-
-    @auth_bp.route("/google/callback")
-    def google_callback():
-        token = google.authorize_access_token()
-        user_info = google.get("https://openidconnect.googleapis.com/v1/userinfo").json()
-
-        email = user_info["email"]
-        user = User.query.filter_by(email=email).first()
-
-        if not user:
-            user = User(email=email)
-            user.set_password("google-oauth")  # dummy password
-            db.session.add(user)
-            db.session.commit()
-
-        access = create_access_token(identity=str(user.id))
-        refresh = create_refresh_token(identity=str(user.id))
-
-        # ✅ Use environment variable for frontend URL (works in local & Render)
-        frontend_base = os.getenv("FRONTEND_URL", "http://localhost:5173")
-        frontend_url = f"{frontend_base}/login?access_token={access}&refresh_token={refresh}&email={email}"
-
-        return redirect(frontend_url)
-
     # ---------- TODO ROUTES ----------
     @todo_bp.route("/", methods=["GET"])
     @jwt_required()
     def get_todos():
-        user_id = get_jwt_identity()
+        user_id = int(get_jwt_identity())
         todos = Todo.query.filter_by(user_id=user_id).all()
         return jsonify([
             {
@@ -122,11 +126,7 @@ def create_blueprints(google, mail):
 
         todo.title = data.get("title", todo.title)
         db.session.commit()
-        return jsonify({
-            "msg": "Todo updated",
-            "id": todo.id,
-            "title": todo.title
-        }), 200
+        return jsonify({"msg": "Todo updated"}), 200
 
     @todo_bp.route("/<int:todo_id>", methods=["DELETE"])
     @jwt_required()
@@ -152,7 +152,6 @@ def create_blueprints(google, mail):
         todo.completed = True
         db.session.commit()
 
-        # ✅ Send email notification
         user = User.query.get(user_id)
         msg = Message(
             subject="✅ Task Completed!",
@@ -163,4 +162,5 @@ def create_blueprints(google, mail):
 
         return jsonify({"msg": "Todo marked completed and email sent!"}), 200
 
+    # ✅ return blueprints at the end
     return auth_bp, todo_bp

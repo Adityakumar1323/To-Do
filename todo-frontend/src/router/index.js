@@ -3,6 +3,8 @@ import Login from "../views/Login.vue";
 import Dashboard from "../views/Dashboard.vue";
 import Register from "../views/Register.vue";
 
+
+
 const routes = [
   {
     path: "/login",
@@ -13,12 +15,14 @@ const routes = [
     path: "/",
     name: "Dashboard",
     component: Dashboard,
+    meta: { requiresAuth: true }, // ✅ only dashboard requires auth
   },
   {
     path: "/register",
     name: "Register",
     component: Register,
   },
+  
 ];
 
 const router = createRouter({
@@ -31,11 +35,9 @@ router.beforeEach((to, from, next) => {
   const token = localStorage.getItem("access_token");
 
   if (to.meta.requiresAuth && !token) {
-    // If route requires auth but no token → redirect to login
-    next("/login");
+    next("/login"); // not logged in → login
   } else if (to.path === "/login" && token) {
-    // If already logged in → redirect to dashboard
-    next("/");
+    next("/"); // already logged in → dashboard
   } else {
     next();
   }

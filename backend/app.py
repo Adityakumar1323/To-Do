@@ -13,7 +13,7 @@ app = Flask(__name__)
 # ---------- Config ----------
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///todo.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-app.config["JWT_SECRET_KEY"] = "super-secret-key"
+app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY", "super-secret-key")
 
 # 🔑 Required for Google OAuth session handling
 app.secret_key = os.getenv("FLASK_SECRET_KEY", "my-dev-secret-key")
@@ -35,8 +35,8 @@ CORS(app,
 oauth = OAuth(app)
 google = oauth.register(
     name="google",
-    client_id=os.getenv("76610639739-ekq368m7d44r5q1figakdi9qr7da59hq.apps.googleusercontent.com"),
-    client_secret=os.getenv("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"),
+    client_id="76610639739-ekq368m7d44r5q1figakdi9qr7da59hq.apps.googleusercontent.com",
+    client_secret="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",
     server_metadata_url="https://accounts.google.com/.well-known/openid-configuration",
     client_kwargs={"scope": "openid email profile"},
 )
@@ -45,9 +45,9 @@ google = oauth.register(
 app.config["MAIL_SERVER"] = "smtp.gmail.com"
 app.config["MAIL_PORT"] = 587
 app.config["MAIL_USE_TLS"] = True
-app.config["MAIL_USERNAME"] = os.getenv("MAIL_USERNAME")
-app.config["MAIL_PASSWORD"] = os.getenv("MAIL_PASSWORD")
-app.config["MAIL_DEFAULT_SENDER"] = os.getenv("MAIL_DEFAULT_SENDER")
+app.config["MAIL_USERNAME"] = os.getenv("MAIL_USERNAME", "adi484841@gmail.com")
+app.config["MAIL_PASSWORD"] = os.getenv("MAIL_PASSWORD", "kzlukqvbeysktyhe")
+app.config["MAIL_DEFAULT_SENDER"] = os.getenv("MAIL_DEFAULT_SENDER", "adi484841@gmail.com")
 
 mail = Mail(app)
 
@@ -60,8 +60,7 @@ auth_bp, todo_bp = create_blueprints(google, mail)
 app.register_blueprint(auth_bp, url_prefix="/api/auth")
 app.register_blueprint(todo_bp, url_prefix="/api/todo")
 
-# ---------- Create tables --------
+# ---------- Run ----------
 if __name__ == "__main__":
-    import os
-    port = int(os.environ.get("PORT", 5000))  # Render gives PORT, default to 5000 for local dev
+    port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)

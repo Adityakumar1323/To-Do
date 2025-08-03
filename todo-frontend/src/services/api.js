@@ -1,57 +1,89 @@
 import axios from "axios";
 
-// ✅ Switch between local dev & Render automatically
 const backendUrl =
   import.meta.env.MODE === "development"
     ? "http://127.0.0.1:5000/api"
     : "https://to-do-5-e2go.onrender.com/api";
 
 const api = axios.create({
-  baseURL: backendUrl, // ✅ now using the correct variable
+  baseURL: backendUrl,
+  withCredentials: true,
 });
 
-// ✅ Attach token to every request
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem("access_token");
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
+// ✅ Attach access token
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem("access_token");
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
 
-// ✅ Automatically refresh access token when expired
+let isRefreshing = false;
+let failedQueue = [];
+
+const processQueue = (error, token = null) => {
+  failedQueue.forEach((prom) => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve(token);
+    }
+  });
+  failedQueue = [];
+};
+
+// ✅ Refresh expired token
 api.interceptors.response.use(
-  (response) => response,
+  (res) => res,
   async (error) => {
     const originalRequest = error.config;
 
     if (error.response?.status === 401 && !originalRequest._retry) {
+      if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        })
+          .then((token) => {
+            originalRequest.headers.Authorization = `Bearer ${token}`;
+            return api(originalRequest);
+          })
+          .catch((err) => Promise.reject(err));
+      }
+
       originalRequest._retry = true;
+      isRefreshing = true;
 
       const refreshToken = localStorage.getItem("refresh_token");
-      if (refreshToken) {
-        try {
-          const { data } = await api.post(
-            "/auth/refresh",
-            {},
-            { headers: { Authorization: `Bearer ${refreshToken}` } }
-          );
+      if (!refreshToken) {
+        localStorage.clear();
+        window.location.href = "/login";
+        return Promise.reject(error);
+      }
 
-          localStorage.setItem("access_token", data.access_token);
+      try {
+        const { data } = await axios.post(
+          `${backendUrl}/auth/refresh`,
+          {},
+          { headers: { Authorization: `Bearer ${refreshToken}` } }
+        );
 
-          // retry request with new token
-          originalRequest.headers["Authorization"] = `Bearer ${data.access_token}`;
-          return api(originalRequest);
-        } catch (err) {
-          console.error("Refresh token failed", err);
-          localStorage.clear();
-          window.location.href = "/login";
-        }
+        const newToken = data.access_token;
+        localStorage.setItem("access_token", newToken);
+
+        api.defaults.headers.common.Authorization = `Bearer ${newToken}`;
+        processQueue(null, newToken);
+        return api(originalRequest);
+      } catch (err) {
+        processQueue(err, null);
+        localStorage.clear();
+        window.location.href = "/login";
+        return Promise.reject(err);
+      } finally {
+        isRefreshing = false;
       }
     }
+
     return Promise.reject(error);
   }
 );
@@ -65,15 +97,8 @@ export const register = (email, password) =>
 export const login = (email, password) =>
   api.post("/auth/login", { email, password });
 
-export const googleLogin = () => {
-  // ✅ dynamic Google login URL
-  const googleUrl =
-    import.meta.env.MODE === "development"
-      ? "http://127.0.0.1:5000/api/auth/google/login"
-      : "https://to-do-5-e2go.onrender.com/api/auth/google/login";
-
-  window.location.href = googleUrl;
-};
+export const googleLogin = (id_token) =>
+  api.post("/auth/google", { id_token });
 
 // ---------- Todo APIs ----------
 export const getTodos = () => api.get("/todo/");
