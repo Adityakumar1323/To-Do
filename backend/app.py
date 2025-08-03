@@ -59,6 +59,10 @@ jwt = JWTManager(app)
 auth_bp, todo_bp = create_blueprints(google, mail)
 app.register_blueprint(auth_bp, url_prefix="/api/auth")
 app.register_blueprint(todo_bp, url_prefix="/api/todo")
+@app.route("/healthz")
+def health_check():
+    return "ok", 200
+
 
 # ---------- Run ----------
 if __name__ == "__main__":
