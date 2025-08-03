@@ -37,7 +37,11 @@
         @click="googleLogin"
         class="w-full bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-lg flex items-center justify-center mt-4"
       >
-        <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google Logo" class="w-5 h-5 mr-2"/>
+        <img
+          src="https://developers.google.com/identity/images/g-logo.png"
+          alt="Google Logo"
+          class="w-5 h-5 mr-2"
+        />
         Sign in with Google
       </button>
     </div>
@@ -47,7 +51,7 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import { useRouter, useRoute } from "vue-router";
-import { login, googleLoginRedirect } from "../services/api";
+import { login } from "../services/api";
 
 const email = ref("");
 const password = ref("");
@@ -63,10 +67,13 @@ const handleLogin = async () => {
   }
 };
 
+// ✅ Redirect user to backend Google login
 const googleLogin = () => {
-  googleLoginRedirect(); // ✅ no hardcoded URL anymore
+  window.location.href =
+    "https://to-do-5-e2go.onrender.com/api/auth/google/login";
 };
 
+// ✅ Save tokens + redirect
 const handleAuthSuccess = (data) => {
   localStorage.setItem("access_token", data.access_token);
   localStorage.setItem("refresh_token", data.refresh_token);
@@ -76,7 +83,7 @@ const handleAuthSuccess = (data) => {
   router.push("/"); // redirect to dashboard
 };
 
-// ✅ Handle Google redirect (store tokens before router guard)
+// ✅ Handle Google redirect (tokens in query params)
 onMounted(() => {
   if (route.query.access && route.query.refresh) {
     handleAuthSuccess({
@@ -87,7 +94,7 @@ onMounted(() => {
       picture: route.query.picture,
     });
 
-    // ✅ Clean the URL so query params don’t stay
+    // ✅ Clean URL params after storing tokens
     router.replace("/");
   }
 });

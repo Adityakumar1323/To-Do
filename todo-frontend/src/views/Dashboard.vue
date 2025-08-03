@@ -76,7 +76,6 @@ const todos = ref([]);
 const newTodo = ref("");
 const router = useRouter();
 
-// Fetch todos (only once on mount)
 const fetchTodos = async () => {
   try {
     const { data } = await API.get("/todo/");
@@ -115,12 +114,10 @@ const deleteTodo = async (id) => {
   }
 };
 
-// Logout (clear tokens + redirect)
 const logout = () => {
   localStorage.clear();
   router.push("/login");
 };
 
-// Load tasks only once
 onMounted(fetchTodos);
 </script>

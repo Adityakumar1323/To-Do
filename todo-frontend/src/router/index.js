@@ -3,8 +3,6 @@ import Login from "../views/Login.vue";
 import Dashboard from "../views/Dashboard.vue";
 import Register from "../views/Register.vue";
 
-
-
 const routes = [
   {
     path: "/login",
@@ -22,7 +20,6 @@ const routes = [
     name: "Register",
     component: Register,
   },
-  
 ];
 
 const router = createRouter({
@@ -30,7 +27,7 @@ const router = createRouter({
   routes,
 });
 
-// ✅ Navigation Guard
+// ✅ Navigation Guard (runs after login tokens are set)
 router.beforeEach((to, from, next) => {
   const token = localStorage.getItem("access_token");
 
