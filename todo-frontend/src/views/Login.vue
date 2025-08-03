@@ -67,7 +67,7 @@ const handleLogin = async () => {
 };
 
 const googleLogin = () => {
-  window.location.href = "http://127.0.0.1:5000/api/auth/google/login";
+  window.location.href = "https://to-do-5-e2go.onrender.com/api/auth/google/login";
 };
 
 const handleAuthSuccess = (data) => {
