@@ -75,7 +75,8 @@ def create_blueprints(google, mail):
         access = create_access_token(identity=str(user.id))
         refresh = create_refresh_token(identity=str(user.id))
 
-        frontend_url = "https://to-do-6-2awb.onrender.com/login"
+        # ✅ Redirect to frontend dashboard after login
+        frontend_url = "https://to-do-6-2awb.onrender.com/"
 
         return redirect(
             f"{frontend_url}?access={access}&refresh={refresh}&email={email}&name={name}&picture={picture}"
