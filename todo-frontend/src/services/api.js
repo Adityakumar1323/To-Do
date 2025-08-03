@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const backendUrl =
+export const backendUrl =
   import.meta.env.MODE === "development"
     ? "http://127.0.0.1:5000/api"
     : "https://to-do-5-e2go.onrender.com/api";
@@ -97,8 +97,10 @@ export const register = (email, password) =>
 export const login = (email, password) =>
   api.post("/auth/login", { email, password });
 
-export const googleLogin = (id_token) =>
-  api.post("/auth/google", { id_token });
+// ✅ For Google login, just redirect (no POST needed here)
+export const googleLoginRedirect = () => {
+  window.location.href = `${backendUrl}/auth/google/login`;
+};
 
 // ---------- Todo APIs ----------
 export const getTodos = () => api.get("/todo/");

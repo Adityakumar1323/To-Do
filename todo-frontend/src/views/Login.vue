@@ -45,9 +45,9 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, onMounted } from "vue";
 import { useRouter, useRoute } from "vue-router";
-import API from "../services/api";
+import { login, googleLoginRedirect } from "../services/api";
 
 const email = ref("");
 const password = ref("");
@@ -56,10 +56,7 @@ const route = useRoute();
 
 const handleLogin = async () => {
   try {
-    const { data } = await API.post("/auth/login", {
-      email: email.value,
-      password: password.value,
-    });
+    const { data } = await login(email.value, password.value);
     handleAuthSuccess(data);
   } catch (err) {
     alert(err.response?.data?.msg || "❌ Login failed");
@@ -67,7 +64,7 @@ const handleLogin = async () => {
 };
 
 const googleLogin = () => {
-  window.location.href = "https://to-do-5-e2go.onrender.com/api/auth/google/login";
+  googleLoginRedirect(); // ✅ no hardcoded URL anymore
 };
 
 const handleAuthSuccess = (data) => {
@@ -79,14 +76,19 @@ const handleAuthSuccess = (data) => {
   router.push("/"); // redirect to dashboard
 };
 
-// Handle redirect from backend
-if (route.query.access && route.query.refresh) {
-  handleAuthSuccess({
-    access_token: route.query.access,
-    refresh_token: route.query.refresh,
-    email: route.query.email,
-    name: route.query.name,
-    picture: route.query.picture,
-  });
-}
+// ✅ Handle Google redirect (store tokens before router guard)
+onMounted(() => {
+  if (route.query.access && route.query.refresh) {
+    handleAuthSuccess({
+      access_token: route.query.access,
+      refresh_token: route.query.refresh,
+      email: route.query.email,
+      name: route.query.name,
+      picture: route.query.picture,
+    });
+
+    // ✅ Clean the URL so query params don’t stay
+    router.replace("/");
+  }
+});
 </script>
